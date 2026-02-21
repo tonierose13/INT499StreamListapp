@@ -1,6 +1,9 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useCart } from "../cart/CartContext";
 
 export default function Layout() {
+  const { itemCount } = useCart();
+
   return (
     <div className="app">
       <header className="header">
@@ -13,12 +16,15 @@ export default function Layout() {
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
             StreamList
           </NavLink>
+
           <NavLink to="/movies" className={({ isActive }) => (isActive ? "active" : "")}>
             Movies
           </NavLink>
+
           <NavLink to="/cart" className={({ isActive }) => (isActive ? "active" : "")}>
-            Cart
+            Cart {itemCount > 0 ? <span className="cartBadge">{itemCount}</span> : null}
           </NavLink>
+
           <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
             About
           </NavLink>

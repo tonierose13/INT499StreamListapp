@@ -1,4 +1,3 @@
-import React from "react";
 import { useCart } from "../cart/CartContext";
 import "./CartPage.css";
 
@@ -14,33 +13,53 @@ export default function CartPage() {
     clearCart,
   } = useCart();
 
+  const handleCheckout = () => {
+    alert("Checkout placeholder ✅");
+  };
+
   return (
     <div className="cart-wrap">
       <header className="cart-header">
         <div>
           <h1 className="cart-title">Your Cart</h1>
-          <p className="cart-subtitle">{itemCount} item(s) in cart • saved automatically</p>
+          <p className="cart-subtitle">
+            {itemCount} item(s) in cart • saved automatically
+          </p>
         </div>
 
-        <button className="cart-btn ghost" onClick={clearCart} disabled={cart.length === 0}>
+        <button
+          className="cart-btn ghost"
+          onClick={clearCart}
+          disabled={cart.length === 0}
+          aria-disabled={cart.length === 0}
+          aria-label="Clear cart"
+        >
           Clear Cart
         </button>
       </header>
 
       {cart.length === 0 ? (
-        <div className="cart-empty">
+        <div className="cart-empty" role="status" aria-live="polite">
           <h2>Cart is empty</h2>
           <p>Add movies or StreamList items to see them here.</p>
         </div>
       ) : (
         <div className="cart-grid">
           <section className="cart-items">
-            {cart.map((item) => (
-              <div key={item.id} className="cart-row">
+            {cart.map((item, index) => (
+              <div key={`${item.id}-${index}`} className="cart-row">
                 {item.image ? (
-                  <img className="cart-thumb" src={item.image} alt={item.title} />
+                  <img
+                    className="cart-thumb"
+                    src={item.image}
+                    alt={`${item.title} thumbnail`}
+                  />
                 ) : (
-                  <div className="cart-thumb fallback" />
+                  <div
+                    className="cart-thumb fallback"
+                    role="img"
+                    aria-label={`${item.title} placeholder`}
+                  />
                 )}
 
                 <div className="cart-row-main">
@@ -48,11 +67,18 @@ export default function CartPage() {
                     <div>
                       <div className="cart-item-title">{item.title}</div>
                       <div className="cart-meta">
-                        Unit: <span className="mono">${Number(item.price).toFixed(2)}</span>
+                        Unit:{" "}
+                        <span className="mono">
+                          ${Number(item.price).toFixed(2)}
+                        </span>
                       </div>
                     </div>
 
-                    <button className="cart-btn danger" onClick={() => removeFromCart(item.id)}>
+                    <button
+                      className="cart-btn danger"
+                      onClick={() => removeFromCart(item.id)}
+                      aria-label={`Remove ${item.title} from cart`}
+                    >
                       Remove
                     </button>
                   </div>
@@ -63,18 +89,41 @@ export default function CartPage() {
                         className="qty-btn"
                         onClick={() => decQuantity(item.id)}
                         disabled={item.quantity <= 1}
+                        aria-label={`Decrease quantity of ${item.title}`}
                       >
                         -
                       </button>
 
+                      <label htmlFor={`qty-${item.id}`} className="sr-only">
+                        Quantity for {item.title}
+                      </label>
                       <input
+                        id={`qty-${item.id}`}
+                        name={`quantity-${item.id}`}
                         className="qty-input"
-                        value={item.quantity}
-                        onChange={(e) => setQuantity(item.id, e.target.value)}
+                        type="number"
+                        min="1"
                         inputMode="numeric"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const val = parseInt(raw, 10);
+
+                          // Allow the user to temporarily clear the field while typing
+                          if (raw === "") return;
+
+                          if (!Number.isNaN(val) && val > 0) {
+                            setQuantity(item.id, val);
+                          }
+                        }}
+                        aria-label={`Quantity for ${item.title}`}
                       />
 
-                      <button className="qty-btn" onClick={() => incQuantity(item.id)}>
+                      <button
+                        className="qty-btn"
+                        onClick={() => incQuantity(item.id)}
+                        aria-label={`Increase quantity of ${item.title}`}
+                      >
                         +
                       </button>
                     </div>
@@ -111,11 +160,18 @@ export default function CartPage() {
               <span className="mono">${Number(subtotal).toFixed(2)}</span>
             </div>
 
-            <button className="cart-btn primary" onClick={() => alert("Checkout placeholder ✅")}>
+            <button
+              className="cart-btn primary"
+              onClick={handleCheckout}
+              disabled={cart.length === 0}
+              aria-disabled={cart.length === 0}
+            >
               Checkout
             </button>
 
-            <p className="summary-note">Cart persists in localStorage even after refresh.</p>
+            <p className="summary-note">
+              Cart persists in localStorage even after refresh.
+            </p>
           </aside>
         </div>
       )}

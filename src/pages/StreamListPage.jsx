@@ -1,12 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useCart } from "../cart/CartContext";
+
+const LS_STREAMLIST = "streamlist.items.v1";
+const ITEM_PRICE = 4.99;
 
 function makeId() {
   return crypto?.randomUUID?.() ?? String(Date.now() + Math.random());
 }
 
+function safeParse(json, fallback) {
+  try {
+    const parsed = JSON.parse(json);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function StreamListPage() {
+  const { addToCart } = useCart();
+
   const [titleInput, setTitleInput] = useState("");
-  const [items, setItems] = useState([]);
+
+  // ✅ Load StreamList from localStorage on first render
+  const [items, setItems] = useState(() => {
+    const raw = localStorage.getItem(LS_STREAMLIST);
+    const parsed = raw ? safeParse(raw, []) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  });
+
+  // ✅ Save StreamList to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(LS_STREAMLIST, JSON.stringify(items));
+  }, [items]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -19,8 +45,7 @@ export default function StreamListPage() {
 
     const newItem = { id: makeId(), text: trimmed, completed: false };
     setItems((prev) => [newItem, ...prev]);
-    console.log(`StreamList input: ${trimmed}`);
-    setTitleInput(""); // clear input after submit
+    setTitleInput("");
   }
 
   function handleDelete(id) {
@@ -64,10 +89,20 @@ export default function StreamListPage() {
       prev.map((item) => {
         if (item.id !== id) return item;
         const trimmed = (item.editText ?? "").trim();
-        if (!trimmed) return item; // don't save empty
+        if (!trimmed) return item;
         return { ...item, text: trimmed, isEditing: false, editText: "" };
       })
     );
+  }
+
+  // ✅ NEW: Add StreamList item to cart
+  function handleAddToCart(item) {
+    addToCart({
+      id: `sl-${item.id}`,          // prefix prevents collision with TMDB movies
+      title: item.text,
+      price: ITEM_PRICE,
+      image: "",                    // StreamList items don't have posters (optional)
+    });
   }
 
   return (
@@ -133,15 +168,20 @@ export default function StreamListPage() {
                       style={styles.editInput}
                     />
                   ) : (
-                    <span
-                      style={{
-                        ...styles.itemText,
-                        textDecoration: item.completed ? "line-through" : "none",
-                        opacity: item.completed ? 0.65 : 1,
-                      }}
-                    >
-                      {item.text}
-                    </span>
+                    <>
+                      <span
+                        style={{
+                          ...styles.itemText,
+                          textDecoration: item.completed ? "line-through" : "none",
+                          opacity: item.completed ? 0.65 : 1,
+                        }}
+                      >
+                        {item.text}
+                      </span>
+
+                      {/* ✅ NEW: price display (optional but nice) */}
+                      <div style={styles.priceText}>${ITEM_PRICE.toFixed(2)}</div>
+                    </>
                   )}
                 </div>
 
@@ -182,6 +222,23 @@ export default function StreamListPage() {
                   </>
                 ) : (
                   <>
+                    {/* ✅ NEW: Add to Cart */}
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(item)}
+                      aria-label="Add to Cart"
+                      title="Add to Cart"
+                      style={{ ...styles.iconBtn, borderColor: "#3b82f6" }}
+                    >
+                      <span
+                        className="material-icons"
+                        aria-hidden="true"
+                        style={{ ...styles.icon, color: "#3b82f6" }}
+                      >
+                        add_shopping_cart
+                      </span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => handleStartEdit(item.id)}
@@ -293,6 +350,11 @@ const styles = {
   itemText: {
     color: "#ffffff",
     fontSize: 18,
+  },
+  priceText: {
+    marginTop: 4,
+    opacity: 0.75,
+    fontSize: 13,
   },
   editInput: {
     width: "100%",
