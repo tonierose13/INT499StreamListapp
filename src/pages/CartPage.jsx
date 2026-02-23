@@ -1,6 +1,6 @@
+import "./CartPage.css";
 import React from "react";
 import { useCart } from "../cart/CartContext";
-import "./CartPage.css";
 
 export default function CartPage() {
   const {
