@@ -1,8 +1,16 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Layout() {
   const { itemCount } = useCart();
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="app">
@@ -28,6 +36,23 @@ export default function Layout() {
           <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
             About
           </NavLink>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              marginLeft: "0.5rem",
+              padding: "0.4rem 0.7rem",
+              borderRadius: "8px",
+              border: "1px solid #d1d5db",
+              background: "#fff",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+            title={user?.name ? `Signed in as ${user.name}` : "Logout"}
+          >
+            Logout
+          </button>
         </nav>
       </header>
 

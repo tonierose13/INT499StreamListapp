@@ -1,8 +1,12 @@
+// src/pages/CartPage.jsx
 import "./CartPage.css";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "../cart/CartContext";
 
 export default function CartPage() {
+  const navigate = useNavigate();
+
   const {
     cart,
     subtotal,
@@ -13,6 +17,10 @@ export default function CartPage() {
     setQuantity,
     clearCart,
   } = useCart();
+
+  const handleCheckout = () => {
+    navigate("/credit-card");
+  };
 
   return (
     <div className="cart-wrap">
@@ -111,7 +119,7 @@ export default function CartPage() {
               <span className="mono">${Number(subtotal).toFixed(2)}</span>
             </div>
 
-            <button className="cart-btn primary" onClick={() => alert("Checkout placeholder ✅")}>
+            <button className="cart-btn primary" onClick={handleCheckout}>
               Checkout
             </button>
 
